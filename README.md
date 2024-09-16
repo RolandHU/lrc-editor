@@ -1,0 +1,2 @@
+# LRC Editor
+Documentation placeholder
