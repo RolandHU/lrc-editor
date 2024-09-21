@@ -14,7 +14,7 @@ export enum LineType {
 }
 
 export enum TagType {
-  TI, AR, AL, AU, LENGTH, BY, OFFSET, RE, TOOL, VE
+  TI, AR, AL, AU, LENGTH, BY, OFFSET, RE, TOOL, VE, ID
 }
 
 export const tagTypeIndex = (tag: string) => {

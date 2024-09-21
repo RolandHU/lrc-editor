@@ -1,9 +1,11 @@
 import { type Timestamp } from "./types"
 
 // Timestamp
-export const timestamp = (time: string | number): Timestamp => {
+export const createTimestamp = (time: string | number): Timestamp => {
+  if (typeof time === "number") time *= 1000
+
   return {
-    raw: typeof(time) === "number" ? time : parseTime(time),
+    raw: typeof(time) === "number" ? Math.floor(time) : parseTime(time),
     formatted: typeof(time) === "string" ? time : convertTime(time)
   }
 }

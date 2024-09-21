@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { timestamp as newTimestamp, timestamp } from "./utils"
+import { createTimestamp } from "./utils"
 import { type Line, LineType, type Timestamp, tagTypeIndex } from "./types"
 
 const lrcManager = () => {
@@ -8,7 +8,7 @@ const lrcManager = () => {
   const setTag = (name: string, value: string) => {
     if (tagTypeIndex(name) < 0) throw Error(`Tag doesn't exist with name ${name}`)
     
-    const timestamp = newTimestamp(-1000 - tagTypeIndex(name))
+    const timestamp = createTimestamp(-1000 - tagTypeIndex(name))
     const index = getLineIndexByTimestamp(timestamp, true)
 
     const tag = {
@@ -28,7 +28,7 @@ const lrcManager = () => {
   const getTag = (name: string) => {
     if (tagTypeIndex(name) < 0) throw Error(`Tag doesn't exist with name ${name}`)
 
-    const timestamp = newTimestamp(-1000 - tagTypeIndex(name))
+    const timestamp = createTimestamp(-1000 - tagTypeIndex(name))
     const index = getLineIndexByTimestamp(timestamp, true)
 
     return get(lines)[index]
@@ -83,6 +83,18 @@ const lrcManager = () => {
     lines.update(prevLines => [...prevLines, ...newLines].sort((a, b) => a.timestamp.raw - b.timestamp.raw))
   }
 
+  const removeLine = (id?: string) => {
+    if (!id) return lines.set([])
+
+    const index = get(lines).findIndex(line => line.id === id)
+    if (index < 0) throw Error("Line doesn't exist with this id")
+    
+    lines.update(prevLines => {
+      prevLines.splice(index, 1)
+      return prevLines
+    })
+  }
+
   const getLineById = (id: string) => get(lines).find(line => line.id === id)
 
   const getLineByTimestamp = (timestamp: Timestamp, precise: boolean = false) => get(lines)[getLineIndexByTimestamp(timestamp, precise)]
@@ -128,14 +140,14 @@ const lrcManager = () => {
         // Handling repeating lines
         parsedLine = line.match(/^(?<timestamps>(\[\d{2}:\d{2}.\d{2}\]){2,})(?<value>.+)$/)?.groups
         if (parsedLine?.timestamps && parsedLine?.value) {
-          const timestamps = [...parsedLine.timestamps.matchAll(/\[(\d{2}:\d{2}.\d{2})\]/g)].map(timestamp => newTimestamp(timestamp[1]))
+          const timestamps = [...parsedLine.timestamps.matchAll(/\[(\d{2}:\d{2}.\d{2})\]/g)].map(timestamp => createTimestamp(timestamp[1]))
           return addLine(parsedLine.value, timestamps)
         }
 
         // Handling simple and extended lines
         parsedLine = line.match(/^\[(?<timestamp>\d{2}:\d{2}.\d{2})\](?<value>.+)$/)?.groups
         if (parsedLine?.timestamp && parsedLine?.value) {
-          const timestamps = [ newTimestamp(parsedLine.timestamp), ...[...line.matchAll(/<(\d{2}:\d{2}.\d{2})>/g)].map(timestamp => newTimestamp(timestamp[1]))]
+          const timestamps = [ createTimestamp(parsedLine.timestamp), ...[...line.matchAll(/<(\d{2}:\d{2}.\d{2})>/g)].map(timestamp => createTimestamp(timestamp[1]))]
           const words = parsedLine.value.split(/<\d{2}:\d{2}.\d{2}>/g)
           return addLine(words.length > 1 ? words : words[0], timestamps)
         }
@@ -158,7 +170,7 @@ const lrcManager = () => {
     return linesToConvert.join("\n")
   }
 
-  return { lines, setTag, getTag, getLineById, getLineByTimestamp, parse, convert }
+  return { lines, setTag, getTag, addLine, removeLine, getLineById, getLineByTimestamp, parse, convert }
 }
 
 export default lrcManager
