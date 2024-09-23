@@ -9,8 +9,7 @@ export type Line = {
 
 export enum LineType {
   TAG,
-  SIMPLE_LYRIC,
-  EXTENDED_LYRIC
+  LYRIC
 }
 
 export enum TagType {
@@ -24,4 +23,9 @@ export const tagTypeIndex = (tag: string) => {
 export type Timestamp = {
   raw: number,
   formatted: string
+}
+
+export type ActiveLine = {
+  line: Line,
+  highlight: Timestamp | undefined
 }
