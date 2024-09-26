@@ -1,21 +1,40 @@
 <script lang="ts">
   import "./app.css"
   import { parse, currentTime } from "./lib/lrcManager"
+  import Dialog from "./components/Dialog.svelte"
+  import FileInput from "./components/FileInput.svelte"
   import LineDisplay from "./components/LineDisplay.svelte"
   import Preview from "./components/Preview.svelte"
 
-  const handleChange = (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const fileList = target.files as FileList
-    
-    if (fileList) parse(fileList[0]) 
+  let audioFile: FileList
+  $: audio = audioFile?.length > 0 ? URL.createObjectURL(audioFile[0]) : null
+  let lrcFile: FileList
+
+  const handleStart = () => {
+    if (!audioFile) {
+      console.log("Warning")
+      return true
+    }
+
+    if (lrcFile?.length > 0) parse(lrcFile[0])
+    return false
   }
 </script>
 
-<main class="h-screen max-h-screen flex flex-col p-6">
-  <!-- Temporary lrc upload -->
-  <input type="file" accept=".lrc" on:change={handleChange}>
+<Dialog open={true} cancellable={false} onContinue={handleStart}>
+  <slot slot="title">LRC Editor</slot>
+  <div class="flex flex-col gap-4" slot="content">
+    <p>Upload the audio file to start creating your lrc file from scratch. Or upload an lrc file as well, to start editing.</p>
+    <FileInput accept="audio/*" on:filechange={(e) => audioFile = e.detail}>
+      <span slot="placeholder">Upload an <b>audio</b> file</span>
+    </FileInput>
+    <FileInput accept=".lrc" on:filechange={(e) => lrcFile = e.detail}>
+      <span slot="placeholder">Upload an <b>lrc</b> file</span>
+    </FileInput>
+  </div>
+</Dialog>
 
+<main class="h-screen max-h-screen flex flex-col p-6">
   <!-- Main editor part -->
   <div class="flex flex-auto gap-6">
     <LineDisplay />
@@ -23,5 +42,5 @@
   </div>
 
   <!-- Audio progress bar -->
-  <audio bind:currentTime={$currentTime} controls></audio>
+  <audio class="w-full" bind:currentTime={$currentTime} src={audio} controls></audio>
 </main>

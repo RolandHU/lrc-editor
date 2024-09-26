@@ -10,7 +10,7 @@ export const activeLine = writable<ActiveLine | undefined>()
 
 // Adds a new line if the tag name is valid and sets the value as the content of the line
 // Sets the timestamp of the line based on the position of the tag name to ensure correct line order
-export const setTag = (name: string, value: string): void => {
+export function setTag(name: string, value: string): void {
   if (tagTypeIndex(name) < 0) throw Error(`Tag doesn't exist with name ${name}`)
   
   const timestamp = createTimestamp(-1000 - tagTypeIndex(name))
@@ -31,7 +31,7 @@ export const setTag = (name: string, value: string): void => {
 }
 
 // Returns a tag line based on the calculated order timestamp if the tag name is valid and the tag exists
-export const getTag = (name: string): Line | undefined => {
+export function getTag (name: string): Line | undefined {
   if (tagTypeIndex(name) < 0) throw Error(`Tag doesn't exist with name ${name}`)
 
   const currLines = get(lines)
@@ -42,7 +42,7 @@ export const getTag = (name: string): Line | undefined => {
 }
 
 // Adds a new line if the content and timestamp is valid
-export const addLine = (content: string | string[], timestamp: Timestamp | Timestamp[]): void => {
+export function addLine (content: string | string[], timestamp: Timestamp | Timestamp[]): void {
   // Content and timestamp is array --> Extended lyric line
   // Only timestamp is array        --> Repeating lyric line
   // None of them is an array       --> Normal lyric line
@@ -93,7 +93,7 @@ export const addLine = (content: string | string[], timestamp: Timestamp | Times
 }
 
 // Removes a line if the id is valid, or removes all of the lines if the id is not provided
-export const removeLine = (id?: string): void => {
+export function removeLine(id?: string): void {
   if (!id) return lines.set([])
 
   const index = get(lines).findIndex(line => line.id === id)
@@ -107,10 +107,12 @@ export const removeLine = (id?: string): void => {
 }
 
 // Gets a line by its id
-export const getLineById = (id: string): Line | undefined => get(lines).find(line => line.id === id)
+export function getLineById(id: string): Line | undefined {
+  return get(lines).find(line => line.id === id) 
+}
 
 // Gets a line's index based on the timestamp, then returns the line
-export const getLineByTimestamp = (timestamp: Timestamp, precise: boolean = false): ActiveLine | undefined => {
+export function getLineByTimestamp(timestamp: Timestamp, precise: boolean = false): ActiveLine | undefined {
   const currLines = get(lines)
   const line = currLines[getLineIndexByTimestamp(timestamp, currLines, precise)]
 
@@ -121,7 +123,7 @@ export const getLineByTimestamp = (timestamp: Timestamp, precise: boolean = fals
 }
 
 // Gets the index of the provided line array, which has the closest smaller timestamp to the provided timestamp, or has the exact timestamp as the provided timestamp
-const getLineIndexByTimestamp = (timestamp: Timestamp, currLines?: Line[], precise: boolean = false) => {
+function getLineIndexByTimestamp(timestamp: Timestamp, currLines?: Line[], precise: boolean = false) {
   currLines = currLines || get(lines)
   if (currLines.length === 0) return -1
 
@@ -140,7 +142,7 @@ const getLineIndexByTimestamp = (timestamp: Timestamp, currLines?: Line[], preci
 }
 
 // Parses the provided file, creates new lines and adds them to the array
-export const parse = (file: File): void => {
+export function parse(file: File): void {
   const reader = new FileReader()
   reader.readAsText(file)
 
@@ -149,38 +151,46 @@ export const parse = (file: File): void => {
     if (!result) throw Error(`${file.name} is empty`)
     if (result instanceof ArrayBuffer) return
     
-    result.split("\n").forEach(line => {
-      line = line.trim()
-      if (line.length === 0) return
+    result.split("\n").forEach(rawLine => {
+      rawLine = rawLine.trim()
+      if (rawLine.length === 0) return
 
-      // Handling tags
-      let parsedLine = line.match(/^\[(?<name>\w+):(?<value>.+)\]$/)?.groups
-      if (parsedLine?.name && parsedLine?.value) return setTag(parsedLine.name, parsedLine.value) 
-
-      // Handling repeating lines
-      parsedLine = line.match(/^(?<timestamps>(\[\d{2}:\d{2}.\d{2}\]){2,})(?<value>.+)$/)?.groups
-      if (parsedLine?.timestamps && parsedLine?.value) {
-        const timestamps = [...parsedLine.timestamps.matchAll(/\[(\d{2}:\d{2}.\d{2})\]/g)].map(timestamp => createTimestamp(timestamp[1]))
-        return addLine(parsedLine.value, timestamps)
+      try {
+        parseLine(rawLine)
+      } catch (error) {
+        console.error(error)
       }
-
-      // Handling simple and extended lines
-      parsedLine = line.match(/^\[(?<timestamp>\d{2}:\d{2}.\d{2})\](?<value>.+)$/)?.groups
-      if (parsedLine?.timestamp && parsedLine?.value) {
-        const timestamps = [ createTimestamp(parsedLine.timestamp), ...[...line.matchAll(/<(\d{2}:\d{2}.\d{2})>/g)].map(timestamp => createTimestamp(timestamp[1]))]
-        const words = parsedLine.value.split(/<\d{2}:\d{2}.\d{2}>/g)
-        return addLine(words.length > 1 ? words : words[0], timestamps)
-      }
-
-      throw Error(`Invalid line: ${line}`)
     })
   }
 
   reader.onerror = () => { throw Error("Failed to read file") }
 }
 
+function parseLine(rawLine: string) {
+  // Handling simple and extended lines
+  let parsedLine = rawLine.match(/^\[(?<timestamp>\d{2}:\d{2}.\d{2})\](?<value>.*)$/)?.groups
+  if (parsedLine?.timestamp) {
+    const timestamps = [ createTimestamp(parsedLine.timestamp), ...[...rawLine.matchAll(/<(\d{2}:\d{2}.\d{2})>/g)].map(timestamp => createTimestamp(timestamp[1]))]
+    const words = parsedLine.value.split(/<\d{2}:\d{2}.\d{2}>/g) || ""
+    return addLine(words.length > 1 ? words : words[0], timestamps)
+  }
+
+  // Handling tags
+  parsedLine = rawLine.match(/^\[(?<name>\w+):(?<value>.+)\]$/)?.groups
+  if (parsedLine?.name && parsedLine?.value) return setTag(parsedLine.name, parsedLine.value) 
+
+  // Handling repeating lines
+  parsedLine = rawLine.match(/^(?<timestamps>(\[\d{2}:\d{2}.\d{2}\]){2,})(?<value>.+)$/)?.groups
+  if (parsedLine?.timestamps && parsedLine?.value) {
+    const timestamps = [...parsedLine.timestamps.matchAll(/\[(\d{2}:\d{2}.\d{2})\]/g)].map(timestamp => createTimestamp(timestamp[1]))
+    return addLine(parsedLine.value, timestamps)
+  }
+
+  throw Error(`Invalid line: ${rawLine}`)
+}
+
 // Concatenates all raw line contents into a single string.
-export const convert = (): string => {
+export function convert(): string {
   const linesToConvert: string[] = []
 
   get(lines).forEach(line => {
