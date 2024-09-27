@@ -25,7 +25,7 @@
   <slot slot="title">LRC Editor</slot>
   <div class="flex flex-col gap-4" slot="content">
     <p>Upload the audio file to start creating your lrc file from scratch. Or upload an lrc file as well, to start editing.</p>
-    <FileInput accept="audio/*" on:filechange={(e) => audioFile = e.detail}>
+    <FileInput accept="audio/*" required={true} requiredText="No audio file was provided" on:filechange={(e) => audioFile = e.detail}>
       <span slot="placeholder">Upload an <b>audio</b> file</span>
     </FileInput>
     <FileInput accept=".lrc" on:filechange={(e) => lrcFile = e.detail}>
