@@ -15,7 +15,7 @@
       {#each words as { timestamp, content }}
         <span>
           <button
-            class={`${timestamp.raw > hTimestamp ? "text-zinc-500" : (timestamp.raw < hTimestamp ? "text-white" : "text-violet-500")} hover:text-violet-500`}
+            class={`${timestamp.raw > hTimestamp ? "text-zinc-500" : (timestamp.raw < hTimestamp ? "text-white" : "text-emerald-400")} hover:text-emerald-400`}
             on:click={() => $currentTime = timestamp.raw / 1000}
           >{content}</button>
         </span>
@@ -23,7 +23,7 @@
     </p>
   {:else if type === LineType.LYRIC}
     <button
-      class={`${active ? "text-violet-500" : ($currentTimestamp.raw > timestamp.raw ? "text-white" : "text-zinc-500")} hover:text-violet-500`}
+      class={`${active ? "text-emerald-400" : ($currentTimestamp.raw > timestamp.raw ? "text-white" : "text-zinc-500")} hover:text-emerald-400`}
       on:click={() => $currentTime = timestamp.raw / 1000}
     >{content}</button>
   {/if}

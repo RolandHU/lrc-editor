@@ -15,7 +15,7 @@
   }
 </script>
 
-<div class={`relative flex flex-col gap-2 p-4 border-2 border-dashed rounded-2xl ${invalid ? "border-red-700" : "border-violet-700"}`}>
+<div class="input relative border-2 rounded-full border-dashed border-emerald-700" class:input-invalid={invalid}>
   {#if invalid}
     <p class="text-center text-red-700">{requiredText}</p>
   {/if}

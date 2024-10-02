@@ -4,9 +4,12 @@ import { type Line, type Timestamp, type ActiveLine } from "./types"
 import { LineType, tagTypeIndex } from "./types"
 import { ErrorCode } from "./errors"
 
-export const lines = writable<Line[]>([])
+export const src = writable<string>()
+export const duration = writable<Timestamp>()
 export const currentTime = writable(0)
 export const currentTimestamp = writable<Timestamp>()
+
+export const lines = writable<Line[]>([])
 export const activeLine = writable<ActiveLine | undefined>()
 
 // Adds a new line if the tag name is valid and sets the value as the content of the line
@@ -78,6 +81,8 @@ export function addLine (content: string | string[], timestamp: Timestamp | Time
         type: LineType.LYRIC
       }
     })
+
+    words.sort((a, b) => a.timestamp.raw - b.timestamp.raw)
 
     newLines.push({
       id: crypto.randomUUID(),

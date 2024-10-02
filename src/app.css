@@ -5,3 +5,45 @@
 html {
   @apply text-white bg-zinc-950;
 }
+
+@layer components {
+  .dialog {
+    @apply opacity-0 w-full max-w-2xl scale-75 p-8 rounded-2xl text-white bg-zinc-900 transition-transform duration-150;
+    transition-property: opacity, transform;
+    transition-delay: 25ms, 0ms;
+  }
+
+  .dialog::backdrop {
+    @apply duration-150;
+    transition-property: background-color, backdrop-filter;
+  }
+
+  .dialog-open {
+    @apply opacity-100 scale-100 backdrop:bg-zinc-950/75 backdrop:backdrop-blur-md;
+    transition-delay: 0ms, 0ms, 0ms;
+  }
+
+  .button {
+    @apply flex items-center gap-4 p-2 rounded-full font-semibold bg-zinc-800 hover:bg-zinc-700 transition-colors duration-200;
+  }
+
+  .button-primary {
+    @apply px-8 py-2 text-white bg-emerald-700 hover:bg-emerald-900;
+  }
+
+  .button-secondary {
+    @apply px-8 py-2 text-black bg-zinc-50 hover:bg-zinc-400;
+  }
+
+  .input-wrapper {
+    @apply flex items-center rounded-full focus-within:outline outline-2 outline-emerald-700 bg-zinc-800;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 outline-none bg-transparent;
+  }
+
+  .input-invalid {
+    @apply outline outline-2 outline-rose-700;
+  }
+}

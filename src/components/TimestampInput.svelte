@@ -5,6 +5,9 @@
   export let requiredText = ""
 
   let invalid = false
+  let style = ""
+
+  $: value ? invalid = false : null
 
   const options = {
     mask: "##:##.##",
@@ -12,8 +15,11 @@
   }
 </script>
 
-<div>
-  <input class={`px-4 py-2 border rounded-full ${invalid ? "border-red-700" : "border-zinc-700"} bg-transparent`} type="text" name="timestamp" use:maska={options} bind:value={value} {required} pattern="\d\d:\d\d\.\d\d" on:change={() => invalid = false} on:invalid|preventDefault={() => invalid = true}>
+<div class="flex flex-col gap-2">
+  <div class={`input-wrapper ${style}`} class:input-invalid={invalid}>
+    <slot/>
+    <input class="input" type="text" name="timestamp" use:maska={options} bind:value={value} {required} pattern="\d\d:\d\d\.\d\d" on:change={() => invalid = false} on:invalid|preventDefault={() => invalid = true}>
+  </div>
   {#if invalid}
     <p class="text-center text-red-700">{requiredText}</p>
   {/if}

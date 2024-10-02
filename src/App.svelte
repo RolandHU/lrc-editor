@@ -1,13 +1,14 @@
 <script lang="ts">
   import "./app.css"
-  import { parse, currentTime } from "./lib/lrcManager"
+  import { src, parse, duration } from "./lib/lrcManager"
   import Dialog from "./components/Dialog.svelte"
   import FileInput from "./components/FileInput.svelte"
   import LineDisplay from "./components/LineDisplay.svelte"
   import Preview from "./components/Preview.svelte"
+  import AudioControls from "./components/AudioControls.svelte"
 
   let audioFile: FileList
-  $: audio = audioFile?.length > 0 ? URL.createObjectURL(audioFile[0]) : null
+  $: audioFile?.length > 0 ? $src = URL.createObjectURL(audioFile[0]) : null
   let lrcFile: FileList
 
   const handleStart = () => {
@@ -34,13 +35,13 @@
   </div>
 </Dialog>
 
-<main class="h-screen max-h-screen flex flex-col p-6">
+<main class="h-screen max-h-screen flex flex-col gap-4 p-6">
   <!-- Main editor part -->
-  <div class="flex flex-auto gap-6">
+  <div class="flex flex-auto gap-4">
     <LineDisplay />
     <Preview />
   </div>
 
   <!-- Audio progress bar -->
-  <audio class="w-full" bind:currentTime={$currentTime} src={audio} controls></audio>
+  <AudioControls />
 </main>
