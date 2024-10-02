@@ -29,3 +29,7 @@ export type ActiveLine = {
   line: Line,
   highlight: Timestamp | undefined
 }
+
+export enum ErrorCode {
+  INVALID_LINE = "INVALID_LINE"
+}

@@ -1,4 +1,5 @@
 import type { Timestamp } from "./types"
+import { ErrorCode } from "./errors"
 
 export function createTimestamp(time: string | number): Timestamp {
   return {
@@ -9,7 +10,7 @@ export function createTimestamp(time: string | number): Timestamp {
 
 function parseTime(timestamp: string): number {
   const [ minutes, seconds, centiseconds ] = timestamp.split(/:|\./)
-  if (!(minutes && seconds && centiseconds)) throw Error("Invalid timestamp format")
+  if (!(minutes && seconds && centiseconds)) throw Error(ErrorCode.INVALID_TIMESTAMP_FORMAT)
 
   return Number(minutes) * 60000 + Number(seconds) * 1000 + Number(centiseconds) * 10
 } 

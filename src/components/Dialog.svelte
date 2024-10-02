@@ -2,11 +2,18 @@
   import Icon from "@iconify/svelte"
   export let open = false
   export let cancellable = true
-  export let onContinue: () => boolean = () => false
+  export let onContinue: (event: SubmitEvent) => boolean = () => false
   export let onCancel: () => boolean = () => false
 
   let dialog: HTMLDialogElement
   $: open ? dialog?.showModal() : dialog?.close()
+
+  const handleSubmit = (event: SubmitEvent) => {
+    const submitter = event.submitter as HTMLButtonElement | null
+
+    if (submitter?.value === "continue") return open = onContinue(event)
+    else if (submitter?.value === "cancel") return open = onCancel()
+  }
 </script>
 
 <dialog class="w-full max-w-2xl flex flex-col gap-8 p-8 rounded-2xl text-white bg-zinc-900 backdrop:bg-zinc-950/75 backdrop:backdrop-blur-md" on:close={() => open = false} bind:this={dialog}>
@@ -20,14 +27,14 @@
       </button>
     {/if}
   </div>
-  <form class="flex flex-col gap-4" on:submit|preventDefault>
+  <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmit}>
     <slot name="content"/>
     <div class="flex justify-end gap-4">
-      <button class="px-8 py-2 rounded-full font-semibold bg-violet-700 hover:bg-violet-900 transition-colors duration-200" on:click={() => open = onContinue()}>
+      <button class="px-8 py-2 rounded-full font-semibold bg-violet-700 hover:bg-violet-900 transition-colors duration-200" value="continue">
         <slot name="continue">Continue</slot>
       </button>
       {#if cancellable}      
-        <button class="px-8 py-2 rounded-full font-semibold text-black bg-zinc-50 hover:bg-zinc-400 transition-colors duration-200" on:click={() => open = onCancel()}>
+        <button class="px-8 py-2 rounded-full font-semibold text-black bg-zinc-50 hover:bg-zinc-400 transition-colors duration-200" value="cancel">
           <slot name="cancel">Cancel</slot>
         </button>
       {/if}

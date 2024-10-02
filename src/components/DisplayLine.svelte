@@ -15,11 +15,11 @@
     <span class="text-violet-400">{timestamp.formatted}</span>
     <p class="text-lg">{content}</p>
   </div>
-  <div class="opacity-0 group-hover:opacity-[200%] translate-x-full group-hover:translate-x-0 flex gap-2 transition-[opacity_0.25s_ease-in-out,transform_1s_ease-in-out]">
-    <button class="select-auto group-hover:select-none" on:click={() => dispatch("edit", data)}>
+  <div class="opacity-0 group-hover:opacity-[200%] translate-x-full group-hover:translate-x-0 flex transition-[opacity_0.25s_ease-in-out,transform_1s_ease-in-out]">
+    <button class="p-2 rounded-full hover:bg-zinc-700 select-none group-hover:select-auto transition-colors duration-200" on:click={() => dispatch("edit", data)}>
       <Icon class="text-lg" icon="material-symbols:edit-rounded"/>
     </button>
-    <button class="select-auto group-hover:select-none" on:click={() => removeLine(id)}>
+    <button class="p-2 rounded-full hover:bg-zinc-700 select-none group-hover:select-auto transition-colors duration-200" on:click={() => removeLine(id)}>
       <Icon class="text-lg" icon="material-symbols:close-rounded"/>
     </button>
   </div>

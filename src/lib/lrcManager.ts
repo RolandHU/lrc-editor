@@ -1,7 +1,8 @@
 import { writable, get } from "svelte/store"
 import { createTimestamp } from "./utils"
-import type { Line, Timestamp, ActiveLine } from "./types"
+import { type Line, type Timestamp, type ActiveLine } from "./types"
 import { LineType, tagTypeIndex } from "./types"
+import { ErrorCode } from "./errors"
 
 export const lines = writable<Line[]>([])
 export const currentTime = writable(0)
@@ -11,7 +12,7 @@ export const activeLine = writable<ActiveLine | undefined>()
 // Adds a new line if the tag name is valid and sets the value as the content of the line
 // Sets the timestamp of the line based on the position of the tag name to ensure correct line order
 export function setTag(name: string, value: string): void {
-  if (tagTypeIndex(name) < 0) throw Error(`Tag doesn't exist with name ${name}`)
+  if (tagTypeIndex(name) < 0) throw Error(ErrorCode.INVALID_TAG_NAME)
   
   const timestamp = createTimestamp(-1000 - tagTypeIndex(name))
   const index = getLineIndexByTimestamp(timestamp, get(lines), true)
@@ -32,7 +33,7 @@ export function setTag(name: string, value: string): void {
 
 // Returns a tag line based on the calculated order timestamp if the tag name is valid and the tag exists
 export function getTag (name: string): Line | undefined {
-  if (tagTypeIndex(name) < 0) throw Error(`Tag doesn't exist with name ${name}`)
+  if (tagTypeIndex(name) < 0) throw Error(ErrorCode.INVALID_TAG_NAME)
 
   const currLines = get(lines)
   const timestamp = createTimestamp(-1000 - tagTypeIndex(name))
@@ -52,7 +53,7 @@ export function addLine (content: string | string[], timestamp: Timestamp | Time
     const timestamps = Array.isArray(timestamp) ? timestamp : [ timestamp ]
 
     timestamps.forEach(timestamp => {
-      if (getLineByTimestamp(timestamp, true)) throw Error("Line already exists with this timestamp")
+      if (getLineByTimestamp(timestamp, true)) throw Error(ErrorCode.LINE_TIMESTAMP_DUPLICATE)
 
       newLines.push({
         id: crypto.randomUUID(),
@@ -63,11 +64,11 @@ export function addLine (content: string | string[], timestamp: Timestamp | Time
       })
     })
   } else if (Array.isArray(content) && Array.isArray(timestamp)) {
-    if (content.length !== timestamp.length) throw Error("Invalid line structure")
-    if (getLineByTimestamp(timestamp[0], true)) throw Error("Line already exists with this timestamp")
+    if (content.length !== timestamp.length) throw Error(ErrorCode.INVALID_LINE_FORMAT)
+    if (getLineByTimestamp(timestamp[0], true)) throw Error(ErrorCode.LINE_TIMESTAMP_DUPLICATE)
 
     const words: Line[] = content.map((cnt, index) => {
-      if (getLineByTimestamp(timestamp[index], true)) throw Error("Line already exists with this timestamp")
+      if (getLineByTimestamp(timestamp[index], true)) throw Error(ErrorCode.LINE_TIMESTAMP_DUPLICATE)
 
       return {
         id: crypto.randomUUID(),
@@ -86,7 +87,7 @@ export function addLine (content: string | string[], timestamp: Timestamp | Time
       timestamp: (timestamp[0]),
       type: LineType.LYRIC
     })
-  } else throw Error("Invalid line structure")
+  } else throw Error(ErrorCode.INVALID_LINE_FORMAT)
 
   lines.update(prevLines => [...prevLines, ...newLines].sort((a, b) => a.timestamp.raw - b.timestamp.raw))
   activeLine.set(getLineByTimestamp(get(currentTimestamp)))
@@ -97,7 +98,7 @@ export function removeLine(id?: string): void {
   if (!id) return lines.set([])
 
   const index = get(lines).findIndex(line => line.id === id)
-  if (index < 0) throw Error("Line doesn't exist with this id")
+  if (index < 0) throw Error(ErrorCode.LINE_NOT_FOUND)
   
   lines.update(prevLines => {
     prevLines.splice(index, 1)
@@ -166,7 +167,7 @@ export function parse(file: File): void {
   reader.onerror = () => { throw Error("Failed to read file") }
 }
 
-function parseLine(rawLine: string) {
+function parseLine(rawLine: string): void {
   // Handling simple and extended lines
   let parsedLine = rawLine.match(/^\[(?<timestamp>\d{2}:\d{2}.\d{2})\](?<value>.*)$/)?.groups
   if (parsedLine?.timestamp) {
@@ -186,7 +187,7 @@ function parseLine(rawLine: string) {
     return addLine(parsedLine.value, timestamps)
   }
 
-  throw Error(`Invalid line: ${rawLine}`)
+  throw Error(ErrorCode.INVALID_RAW_LINE)
 }
 
 // Concatenates all raw line contents into a single string.
